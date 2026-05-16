@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: incidenthub-postgres
+    environment:
+      POSTGRES_USER: incidenthub
+      POSTGRES_PASSWORD: incidenthub_password
+      POSTGRES_DB: incidenthub
+    ports:
+      - "5432:5432"
+    volumes:
+      - incidenthub_pgdata:/var/lib/postgresql/data
+
+volumes:
+  incidenthub_pgdata:

@@ -1,9 +1,12 @@
 using IncidentHub.Api.Services;
 using IncidentHub.Api.DTOs.Incidents;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace IncidentHub.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/incidents")]
 public class IncidentsController : ControllerBase
@@ -38,15 +41,23 @@ public class IncidentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<IncidentResponse>> Create(CreateIncidentRequest request)
     {
-        var created = await _incidentService.CreateAsync(request);
+        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(userIdValue, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var incident = await _incidentService.CreateAsync(request, userId);
 
         return CreatedAtAction(
                 nameof(GetById),
-                new { id = created.Id },
-                created
+                new { id = incident.Id },
+                incident
         );
     }
 
+    [Authorize]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<IncidentResponse>> Update(Guid id, UpdateIncidentRequest request)
     {
@@ -60,6 +71,7 @@ public class IncidentsController : ControllerBase
         return Ok(updated);
     }
 
+    [Authorize(Policy = "RequireAdmin")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

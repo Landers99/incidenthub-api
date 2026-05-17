@@ -27,7 +27,7 @@ public class IncidentService : IIncidentService
         return incident is null ? null : ToResponse(incident);
     }
 
-    public async Task<IncidentResponse> CreateAsync(CreateIncidentRequest request)
+    public async Task<IncidentResponse> CreateAsync(CreateIncidentRequest request, Guid userId)
     {
         var incident = new Incident
         {
@@ -38,7 +38,7 @@ public class IncidentService : IIncidentService
             Status = IncidentStatus.Open,
             AssignedToUserId = request.AssignedToUserId,
             CreatedAtUtc = DateTime.UtcNow,
-            CreatedByUserId = Guid.Parse("fa26bcb5-9d47-4c1c-9c95-118eb70002cd")  // Temporary until auth exists
+            CreatedByUserId = userId
         };
 
         await _incidentRepository.AddAsync(incident);

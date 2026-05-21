@@ -1,4 +1,5 @@
 using IncidentHub.Api.DTOs.Incidents;
+using IncidentHub.Api.DTOs.Common;
 using IncidentHub.Api.Repository;
 using IncidentHub.Api.Models;
 
@@ -25,6 +26,13 @@ public class IncidentService : IIncidentService
         var incident = await _incidentRepository.GetByIdAsync(id);
 
         return incident is null ? null : ToResponse(incident);
+    }
+
+    public async Task<PagedResponse<IncidentListItemResponse>> GetPagedAsync(IncidentQueryRequest query)
+    {
+        ValidateQuery(query);
+
+        return await _incidentRepository.GetPagedAsync(query);
     }
 
     public async Task<IncidentResponse> CreateAsync(CreateIncidentRequest request, Guid userId)
@@ -119,5 +127,48 @@ public class IncidentService : IIncidentService
             AssignedToUserId = incident.AssignedToUserId,
             CreatedAtUtc = incident.CreatedAtUtc
         };
+    }
+
+    private static void ValidateQuery(IncidentQueryRequest query)
+    {
+        if (query.Page < 1)
+        {
+            throw new ArgumentException("Page must be greater than or equal to 1.");
+        }
+
+        if (query.PageSize < 1 || query.PageSize > 100)
+        {
+            throw new ArgumentException("PageSize must be between 1 and 100.");
+        }
+
+        var allowedSortFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "createdAt",
+            "updatedAt",
+            "priority",
+            "status",
+            "title"
+        };
+
+        if (!allowedSortFields.Contains(query.SortBy))
+        {
+            throw new ArgumentException($"Invalid sort field '{query.SortBy}'. Allowed values: 'createdAt', 'updatedAt', 'priority', 'status', 'title'.");
+        }
+
+        var allowedDirections = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "asc",
+            "desc"
+        };
+
+        if (!allowedDirections.Contains(query.SortDirection))
+        {
+            throw new ArgumentException($"Invalid sort direction '{query.SortDirection}'. Allowed values: 'asc', 'desc'.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search) && query.Search.Length > 100)
+        {
+            throw new ArgumentException("Search cannot exceed 100 characters.");
+        }
     }
 }

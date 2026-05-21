@@ -1,5 +1,6 @@
 using IncidentHub.Api.Services;
 using IncidentHub.Api.DTOs.Incidents;
+using IncidentHub.Api.DTOs.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -18,13 +19,6 @@ public class IncidentsController : ControllerBase
         _incidentService = incidentService;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<List<IncidentSummaryResponse>>> GetAll()
-    {
-        var incidents = await _incidentService.GetAllAsync();
-        return Ok(incidents);
-    }
-
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<IncidentResponse>> GetById(Guid id)
     {
@@ -36,6 +30,15 @@ public class IncidentsController : ControllerBase
         }
 
         return Ok(incident);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<ActionResult<PagedResponse<IncidentListItemResponse>>> GetIncidents(
+            [FromQuery] IncidentQueryRequest query)
+    {
+        var response = await _incidentService.GetPagedAsync(query);
+        return Ok(response);
     }
 
     [HttpPost]

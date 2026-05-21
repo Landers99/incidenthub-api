@@ -90,6 +90,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IIncidentRepository, IncidentRepository>();
 builder.Services.AddScoped<IIncidentService, IncidentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 builder.Services.AddControllers();
 

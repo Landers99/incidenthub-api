@@ -142,11 +142,11 @@ public class IncidentRepository : IIncidentRepository
             "status" => ascending
                 ? query.OrderBy(i => i.Status)
                 : query.OrderByDescending(i => i.Status),
-            
+
             "priority" => ascending
                 ? query.OrderBy(i => i.Priority)
                 : query.OrderByDescending(i => i.Priority),
-                
+
             "updatedat" => ascending
                 ? query.OrderBy(i => i.UpdatedAtUtc)
                 : query.OrderByDescending(i => i.UpdatedAtUtc),

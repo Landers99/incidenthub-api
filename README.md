@@ -8,10 +8,10 @@ IncidentHub uses JWT authentication with role-based authorization.
 
 Supported auth endpoints:
 
-```
-- POST /api/auth/register
-- POST /api/auth/login
-- GET /api/auth/me
+```http
+POST /api/auth/register
+POST /api/auth/login
+GET /api/auth/me
 ```
 
 Roles:
@@ -29,29 +29,60 @@ Security notes:
 
 List incidents:
 
-```GET /api/incidents```
+```http
+GET /api/incidents
+```
 
 Filter by priority:
 
-```GET /api/incidents?priority=High```
+```http
+GET /api/incidents?priority=High
+```
 
 Search:
 
-```GET /api/incidents?search=login```
+```http
+GET /api/incidents?search=login
+```
 
 Pagination:
 
-```GET /api/incidents?sortBy=createdAt&sortDirection=desc```
+```http
+GET /api/incidents?sortBy=createdAt&sortDirection=desc
+```
 
 Combined query:
 
-```GET /api/incidents?status=Open&priority=High&page=1&pageSize=10&sortBy=createdAt&sortDirection=desc```
+```http
+GET /api/incidents?status=Open&priority=High&page=1&pageSize=10&sortBy=createdAt&sortDirection=desc
+```
 
 Comments:
 
-```
+```http
 POST /api/incidents/{incidentId}/comments
 GET /api/incidents/{incident}/comments
 DELETE /api/comments/{commentId}
 ```
 
+## Observability and Error Handling
+
+IncidentHub includes production-style diagnostics:
+
+- Global exception handling
+- Standard JSON error responses
+- Correlation IDs using `X-Correlation-ID`
+- Structured request logging with Serilog
+- Slow request warnings ver 500ms
+- Clean validation error responses
+
+Example:
+
+```json
+{
+  "error": "InternalServerError",
+  "message": "An unexpected error occurred.",
+  "correlationId": "6c0c70ce-5e5e-4e6b-a8cc-1c90eec6d9af",
+  "timestampUtc": "2026-05-20T18:12:00Z"
+}
+```

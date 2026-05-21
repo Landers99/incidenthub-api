@@ -51,7 +51,7 @@ public class CommentsController : ControllerBase
 
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = 
+        var userIdClaim =
             User.FindFirstValue(ClaimTypes.NameIdentifier) ??
             User.FindFirstValue("sub") ??
             User.FindFirstValue("userId");

@@ -15,7 +15,7 @@ namespace IncidentHub.Api.Services;
 public class AuthService : IAuthService
 {
     private readonly AppDbContext _db;
-    
+
     private readonly JwtSettings _jwtSettings;
 
     public AuthService(AppDbContext db, IOptions<JwtSettings> jwtOptions)
@@ -23,7 +23,7 @@ public class AuthService : IAuthService
         _db = db;
         _jwtSettings = jwtOptions.Value;
     }
-    
+
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
     {
         var email = request.Email.Trim().ToLowerInvariant();
@@ -111,7 +111,7 @@ public class AuthService : IAuthService
                 Encoding.UTF8.GetBytes(_jwtSettings.Secret));
 
         var credentials = new SigningCredentials(
-                key, 
+                key,
                 SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(

@@ -4,12 +4,41 @@ using IncidentHub.Api.Repository;
 using IncidentHub.Api.Services;
 using IncidentHub.Api.Configuration;
 using IncidentHub.Api.Models;
+using IncidentHub.Api.Middleware;
+using IncidentHub.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var correlationId = context.HttpContext.GetCorrelationId();
+
+        var errors = context.ModelState
+            .Where(x => x.Value?.Errors.Count > 0)
+            .ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+        var response = new
+        {
+            error = "ValidationError",
+            message = "One or more validation errors occurred.",
+            correlationId,
+            timestampUtc = DateTime.UtcNow,
+            details = errors
+        };
+
+        return new BadRequestObjectResult(response);
+    };
+});
 
 builder.Services.Configure<JwtSettings>(
         builder.Configuration.GetSection("Jwt"));
@@ -95,7 +124,19 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 
 builder.Services.AddControllers();
 
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console();
+});
+
 var app = builder.Build();
+
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

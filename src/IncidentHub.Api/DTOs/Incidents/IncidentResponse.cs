@@ -11,6 +11,10 @@ public class IncidentResponse
     public IncidentPriority Priority { get; set; }
     public Guid CreatedByUserId { get; set; }
     public Guid? AssignedToUserId { get; set; }
+
+    public UserSummaryResponse? CreatedBy { get; set; }
+    public UserSummaryResponse? AssignedTo { get; set; }
+
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
     public DateTime? ResolvedAtUtc { get; set; }

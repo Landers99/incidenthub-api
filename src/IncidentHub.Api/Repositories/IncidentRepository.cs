@@ -32,6 +32,8 @@ public class IncidentRepository : IIncidentRepository
             IncidentQueryRequest query)
     {
         var incidentsQuery = _dbContext.Incidents
+            .Include(i => i.CreatedByUser)
+            .Include(i => i.AssignedToUser)
             .AsNoTracking()
             .AsQueryable();
 

@@ -112,7 +112,19 @@ public class IncidentService : IIncidentService
             AssignedToUserId = incident.AssignedToUserId,
             CreatedAtUtc = incident.CreatedAtUtc,
             UpdatedAtUtc = incident.UpdatedAtUtc,
-            ResolvedAtUtc = incident.ResolvedAtUtc
+            ResolvedAtUtc = incident.ResolvedAtUtc,
+
+            CreatedBy = new UserSummaryResponse
+            {
+                Id = incident.CreatedByUser.Id,
+                Email = incident.CreatedByUser.Email
+            },
+            
+            AssignedTo = new UserSummaryResponse
+            {
+                Id = incident.AssignedToUser!.Id,
+                Email = incident.AssignedToUser.Email
+            }
         };
     }
 

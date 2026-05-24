@@ -115,7 +115,7 @@ public class AuthService : IAuthService
                 SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-                issuer: "IncidentHub",
+                issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 claims: claims,
                 expires: expiresAtUtc,

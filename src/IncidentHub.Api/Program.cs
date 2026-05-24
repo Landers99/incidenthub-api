@@ -62,7 +62,7 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = "IncdientHub.Api",
+            ValidIssuer = jwtSettings.Issuer,
 
             ValidateAudience = true,
             ValidAudience = jwtSettings.Audience,
@@ -73,6 +73,36 @@ builder.Services
 
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1)
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILogger<Program>>();
+
+                logger.LogWarning(
+                        context.Exception,
+                        "JWT authentication failed. Path={Path}",
+                        context.HttpContext.Request.Path);
+
+                return Task.CompletedTask;
+            },
+
+            OnChallenge = context =>
+            {
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILogger<Program>>();
+
+                logger.LogWarning(
+                        "JWT challenge triggered. Path={Path}, Error={Error}, Description={Description}",
+                        context.HttpContext.Request.Path,
+                        context.Error,
+                        context.ErrorDescription);
+
+                return Task.CompletedTask;
+            }
         };
     });
 

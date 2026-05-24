@@ -32,8 +32,6 @@ public class IncidentRepository : IIncidentRepository
             IncidentQueryRequest query)
     {
         var incidentsQuery = _dbContext.Incidents
-            .Include(i => i.CreatedByUser)
-            .Include(i => i.AssignedToUser)
             .AsNoTracking()
             .AsQueryable();
 
@@ -113,6 +111,11 @@ public class IncidentRepository : IIncidentRepository
     {
         await _dbContext.Incidents.AddAsync(incident);
         await _dbContext.SaveChangesAsync();
+
+        await _dbContext.Incidents
+            .Include(i => i.CreatedByUser)
+            .Include(i => i.AssignedToUser)
+            .FirstOrDefaultAsync(i => i.Id == incident.Id);
     }
 
     public async Task UpdateAsync(Incident incident)

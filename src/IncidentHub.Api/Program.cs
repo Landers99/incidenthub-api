@@ -62,7 +62,7 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtSettings.Issuer,
+            ValidIssuer = "IncdientHub.Api",
 
             ValidateAudience = true,
             ValidAudience = jwtSettings.Audience,

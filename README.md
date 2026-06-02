@@ -86,3 +86,29 @@ Example:
   "timestampUtc": "2026-05-20T18:12:00Z"
 }
 ```
+
+## Test Dataset
+
+To reproduce the performance issue, I created a development-only large dataset seeder.
+
+The seeder generated:
+
+- 100 users
+- 5,000 incidents
+- 20,000 comments
+
+Incident statuses were weighted to approximate a real support queue:
+
+- Open: 40%
+- In Progress: 25%
+- Resolved: 25%
+- Closed: 10%
+
+Priorities were also weighted:
+
+- Low: 35%
+- Medium: 35%
+- High: 25%
+- Critical: 8%
+
+This made the incident list endpoint realistic enough to expose inefficient query behavior.

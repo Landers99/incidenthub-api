@@ -6,6 +6,7 @@ using IncidentHub.Api.Configuration;
 using IncidentHub.Api.Models;
 using IncidentHub.Api.Middleware;
 using IncidentHub.Api.Extensions;
+using IncidentHub.Api.Data.Seeders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -151,6 +152,7 @@ builder.Services.AddScoped<IIncidentService, IncidentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<LargeDatasetSeeder>();
 
 builder.Services.AddControllers();
 

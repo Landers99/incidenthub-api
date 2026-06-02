@@ -31,9 +31,11 @@ public class IncidentRepository : IIncidentRepository
     public async Task<PagedResponse<IncidentListItemResponse>> GetPagedAsync(
             IncidentQueryRequest query)
     {
-        var incidentsQuery = _dbContext.Incidents
-            .AsNoTracking()
-            .AsQueryable();
+        var incidents = await _dbContext.Incidents
+            .Include(i => i.CreatedByUser)
+            .Include(i => i.AssignedToUser)
+            .Include(i => i.Comments)
+            .ToListAsync();
 
         if (!string.IsNullOrWhiteSpace(query.Status))
         {
@@ -42,7 +44,9 @@ public class IncidentRepository : IIncidentRepository
                 throw new ArgumentException($"Invalid status '{query.Status}'.");
             }
 
-            incidentsQuery = incidentsQuery.Where(i => i.Status == status);
+            incidents = incidents
+                .Where(i => i.Status == status)
+                .ToList();
         }
 
         if (!string.IsNullOrWhiteSpace(query.Priority))
@@ -52,35 +56,41 @@ public class IncidentRepository : IIncidentRepository
                 throw new ArgumentException($"Invalid priority '{query.Priority}'.");
             }
 
-            incidentsQuery = incidentsQuery.Where(i => i.Priority == priority);
+            incidents = incidents
+                .Where(i => i.Priority == priority)
+                .ToList();
         }
 
         if (query.AssignedToUserId.HasValue)
         {
-            incidentsQuery = incidentsQuery.Where(
-                    i => i.AssignedToUserId == query.AssignedToUserId.Value);
+            incidents = incidents
+                .Where(i => i.AssignedToUserId == query.AssignedToUserId.Value)
+                .ToList();
         }
 
         if (query.CreatedByUserId.HasValue)
         {
-            incidentsQuery = incidentsQuery.Where(
-                i => i.CreatedByUserId == query.CreatedByUserId.Value);
+            incidents = incidents
+                .Where(i => i.CreatedByUserId == query.CreatedByUserId.Value)
+                .ToList();
         }
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             var search = query.Search.Trim().ToLower();
 
-            incidentsQuery = incidentsQuery.Where(
-                    i => i.Title.ToLower().Contains(search) ||
-                    i.Description.ToLower().Contains(search));
+            incidents = incidents
+                .Where(i =>
+                    i.Title.ToLower().Contains(search) ||
+                    i.Description.ToLower().Contains(search))
+                .ToList();
         }
 
-        incidentsQuery = ApplySorting(incidentsQuery, query);
+        incidents = ApplySortingInMemory(incidents, query).ToList();
 
-        var totalCount = await incidentsQuery.CountAsync();
+        var totalCount = incidents.Count();
 
-        var items = await incidentsQuery
+        var items = incidents
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(i => new IncidentListItemResponse
@@ -96,7 +106,7 @@ public class IncidentRepository : IIncidentRepository
                     ? null
                     : i.AssignedToUser.Email
             })
-            .ToListAsync();
+            .ToList();
 
         return new PagedResponse<IncidentListItemResponse>
         {
@@ -130,35 +140,36 @@ public class IncidentRepository : IIncidentRepository
         await _dbContext.SaveChangesAsync();
     }
 
-    private static IQueryable<Incident> ApplySorting(
-            IQueryable<Incident> query,
-            IncidentQueryRequest request)
+    private static IEnumerable<Incident> ApplySortingInMemory(
+            IEnumerable<Incident> incidents,
+            IncidentQueryRequest query)
     {
-        var ascending = request.SortDirection.Equals(
-                "asc",
+        var descending = string.Equals(
+                query.SortDirection,
+                "desc",
                 StringComparison.OrdinalIgnoreCase);
 
-        return request.SortBy.ToLowerInvariant() switch
+        return query.SortBy?.ToLower() switch
         {
-            "title" => ascending
-                ? query.OrderBy(i => i.Title)
-                : query.OrderByDescending(i => i.Title),
+            "title" => descending
+                ? incidents.OrderByDescending(i => i.Title)
+                : incidents.OrderBy(i => i.Title),
 
-            "status" => ascending
-                ? query.OrderBy(i => i.Status)
-                : query.OrderByDescending(i => i.Status),
+            "status" => descending
+                ? incidents.OrderByDescending(i => i.Status)
+                : incidents.OrderBy(i => i.Status),
 
-            "priority" => ascending
-                ? query.OrderBy(i => i.Priority)
-                : query.OrderByDescending(i => i.Priority),
+            "priority" => descending
+                ? incidents.OrderByDescending(i => i.Priority)
+                : incidents.OrderBy(i => i.Priority),
 
-            "updatedat" => ascending
-                ? query.OrderBy(i => i.UpdatedAtUtc)
-                : query.OrderByDescending(i => i.UpdatedAtUtc),
+            "updatedat" => descending
+                ? incidents.OrderByDescending(i => i.UpdatedAtUtc)
+                : incidents.OrderBy(i => i.UpdatedAtUtc),
 
-            _ => ascending
-                ? query.OrderBy(i => i.CreatedAtUtc)
-                : query.OrderByDescending(i => i.CreatedAtUtc),
+            _ => descending
+                ? incidents.OrderByDescending(i => i.CreatedAtUtc)
+                : incidents.OrderBy(i => i.CreatedAtUtc)
         };
     }
 }
